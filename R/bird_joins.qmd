@@ -1,0 +1,66 @@
+---
+title: "EOD Practice Joins and Strings"
+author: "BJ"
+format: html
+editor: visual
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r}
+library(tidyverse)
+library(lubridate)
+library(here)
+```
+
+```{r}
+bird_observations <- read_csv((here::here) ("data", "52_pp52_birds_1.csv"))
+sites <- read_csv((here::here) ("data", "52_pp52_sites_1.csv"))
+surveys <- read_csv((here::here) ("data", "52_pp52_surveys_1.csv"))
+taxalist <- read_csv((here::here) ("data", "52_pp52_taxalist_1.csv"))
+```
+
+```{r}
+#Task 1: Joins on Birds
+
+birds_subset <- bird_observations |>
+  filter(species_id %in% c("BHCO", "RWBL")) |>
+  filter(site_id %in% c("LI-W", "NU-C"))
+
+#left joins
+
+birds_left <- left_join(birds_subset, sites, by = "site_id") |>
+  left_join(birds_subset, taxalist, by = "species_id")
+
+#full join
+
+#i expect 6 new columns and perhaps some nas. And things may be ordered differently 
+
+birds_full <- full_join(birds_subset, sites, by = "site_id")
+
+#takeaway - wow thats a lot of NAs. 
+```
+
+```{r}
+#Task 2
+
+birds <- bird_observations |>
+  rename(bird_obs_notes = notes)
+
+four_column_bs <- birds |>
+  full_join(sites, by = "site_id") |>
+  full_join(surveys, by = "site_id") |>
+  full_join(taxalist, by = "species_id") |>
+  select(survey_date, common_name, park_name, bird_count)
+
+#add a column with just the month, and then move that month next to survey date
+four_column_bs <- four_column_bs |>
+  mutate(month = month(survey_date)) |>
+  relocate(survey_date, month) |>
+  group_by(park_name, month) |>
+  filter(park_name %in% c("Lindo", "Orme", "Palomino", "Sonrisa"))
+```
+
+
+
+
